@@ -17,7 +17,7 @@ def total_clean(json1,json2):
         normdata_cleaner=[]
         for i in normdata:
             if numm ==2:
-                cleaner0 = [j for j in i[1].split('\n') if j]
+                cleaner0 = [j for j in i[1].split('\n') if j] #remove blank and split line
             else:
                 cleaner0 = i[1]
             cleaner1 = [k for k in cleaner0 if " ".join(k.split()[:numm]) not in deleteset]
@@ -34,3 +34,27 @@ def total_clean(json1,json2):
 
 total_clean1 = total_clean('norm.json','cleannorm.json')
 total_clean2 = total_clean('root.json','cleanroot.json')
+
+
+#clean root data further
+with open('root.json') as rootfile2:
+    rootdata2 = json.load(rootfile2)
+
+rootcleaner =[]
+for i in rootdata2:
+    item = i[2]
+    pattern = 'diff --git'
+    index = item.find(pattern)
+    new_item = item[index:]
+    rc = [i[0],i[1],new_item]
+    rootcleaner.append(rc)
+
+
+with open('root_update.json','w') as rootupdata_file:
+    json.dump(rootcleaner,rootupdata_file)
+
+
+
+
+
+
