@@ -14,3 +14,6 @@ for data_hash in data:
     output_data_all.append([data_hash[0],output.ids])
 
 #tokenizer.decode(output_data_all[1][1])
+
+with open('output_tokenizer.json','w') as output_token:
+    json.dump(output_data_all,output_token)
