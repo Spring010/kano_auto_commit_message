@@ -10,6 +10,7 @@ tokenizer = Tokenizer.from_file("kano_input_code_tokenizer.json")
 
 for commit in data:
     hashnum, body = commit
+    new_data = []
     for input_data in body:
         code, mark = input_data
         code_token = []
@@ -26,7 +27,8 @@ for commit in data:
             else:
                 raise ValueError('A very specific bad thing happened')
         new_input = [code_token,mark]
-    commit[1] = new_input
+        new_data.append(new_input)
+    commit[1] = new_data
 
 with open('input_code_tokenize.json','w') as input_code_tokenizer:
     json.dump(data,input_code_tokenizer)
