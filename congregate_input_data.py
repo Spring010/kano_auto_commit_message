@@ -43,3 +43,6 @@ with open('input_token_final.json','w') as input_token_final:
 
 with open('input_segment_final.json','w') as input_segment_final:
     json.dump(new_segment,input_segment_final)
+
+with open('input_code_final.json','w') as input_code_final:
+    json.dump(clean_data_code,input_code_final)
