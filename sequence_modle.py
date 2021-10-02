@@ -190,6 +190,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 inputdata = torch.load('input.pt')
 outputdata = torch.load('output.pt')
+inputdata = [[d.to(device) for d in data] for data in inputdata]
+outputdata = [d.to(device) for d in outputdata]
 
 data = list(zip(inputdata,outputdata))
 train_size = int(0.8 * len(data))
