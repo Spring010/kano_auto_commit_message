@@ -126,6 +126,7 @@ def trainIters(encoder, decoder, train_dataset, n_iters=1, learning_rate=0.01):
     criterion = nn.NLLLoss()
     for iter in range(n_iters):
         (input_tensor, input_segment), target_tensor = random.choice(train_dataset)
+        #(input_tensor, input_segment), target_tensor = train_dataset[0]
         input_tensor = input_tensor.unsqueeze(-1)
         target_tensor = target_tensor.unsqueeze(-1)
         loss = train(input_tensor, target_tensor, encoder,
@@ -158,13 +159,13 @@ def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
             decoder_attentions[di] = decoder_attention.data
             topv, topi = decoder_output.data.topk(1)
             if topi.item() == EOS_token:
-                decoded_words.append('<EOS>')
+                decoded_words.append(EOS_token)
                 break
             else:
-                decoded_words.append(py_tokenizer.decode([topi.item()]))
+                decoded_words.append(topi.item())
+                #decoded_words.append(py_tokenizer.decode([topi.item()]))
 
             decoder_input = topi.squeeze().detach()
-
         return decoded_words, decoder_attentions[:di + 1]
 
 
@@ -173,7 +174,9 @@ def evaluateRandomly(encoder, decoder, n=3):
     target = []
     for i in range(n):
         (input_tensor, input_segment), target_tensor = random.choice(validation_dataset)
+        #(input_tensor, input_segment), target_tensor = train_dataset[0]
         output_words, attentions = evaluate(encoder, decoder, input_tensor)
+        output_words = py_tokenizer.decode(output_words)
         output.append(output_words)
         target.append([py_tokenizer.decode(list(target_tensor))])
     references = target
@@ -214,7 +217,7 @@ hidden_size = 256
 encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), hidden_size).to(device)
 attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1).to(device)
 
-loss = trainIters(encoder1, attn_decoder1, train_dataset, n_iters=190, learning_rate=0.01)
+loss = trainIters(encoder1, attn_decoder1, train_dataset, n_iters=100, learning_rate=0.01)
 
 evaluateRandomly(encoder1, attn_decoder1)
 
