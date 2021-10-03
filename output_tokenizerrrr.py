@@ -50,10 +50,12 @@ bert_tokenizer.post_processor = TemplateProcessing(
 from tokenizers.trainers import WordPieceTrainer
 
 trainer = WordPieceTrainer(
-    vocab_size=30522, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"]
+    vocab_size=30522, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],  min_frequency = 1,
 )
 
 
 bert_tokenizer.train_from_iterator(tokenize_data, trainer)
+
+print(bert_tokenizer.get_vocab())
 
 bert_tokenizer.save("kano_py_tokenizer.json")

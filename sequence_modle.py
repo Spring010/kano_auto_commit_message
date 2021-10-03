@@ -217,8 +217,6 @@ hidden_size = 256
 encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), hidden_size).to(device)
 attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1).to(device)
 
-loss = trainIters(encoder1, attn_decoder1, train_dataset, n_iters=100, learning_rate=0.01)
+loss = trainIters(encoder1, attn_decoder1, train_dataset, n_iters=30, learning_rate=0.01)
 
 evaluateRandomly(encoder1, attn_decoder1)
-
-from nltk.translate.bleu_score import corpus_bleu

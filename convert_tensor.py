@@ -18,11 +18,15 @@ dict_output = dict(outputdata)
 
 tensor_in = []
 tensor_out = []
+tensor_zip = []
 for keys in dict_input_code.keys():
     input_tensor = [torch.tensor(dict_input_code[keys]),torch.tensor(dict_input_seg[keys])]
     output_tensor = torch.tensor(dict_output[keys])
+    zip_tensor = [(torch.tensor(dict_input_code[keys]),torch.tensor(dict_input_seg[keys])),torch.tensor(dict_output[keys])]
     tensor_in.append(input_tensor)
     tensor_out.append(output_tensor)
+    tensor_zip.append(zip_tensor)
 
 torch.save(tensor_in,'input.pt')
 torch.save(tensor_out,'output.pt')
+torch.save(tensor_zip,'zip_tensor.pt')
