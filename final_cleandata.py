@@ -20,11 +20,11 @@ for j in aadara:
     # split @@ under diffsplit
     atatsplit = [i.split('\n@@') for i in diffsplit]
     # pick up .py
-    pickuppy = [i[0][-3:] for i in atatsplit]
+    #pickuppy = [i[0][-3:] for i in atatsplit]
     #alltail
-    if all(i == '.py' for i in pickuppy):
-        jj = [*_,diff,atatsplit]
-        aadara_diffat.append(jj)
+    #if all(i == '.py' for i in pickuppy):
+    jj = [*_,diff,atatsplit]
+    aadara_diffat.append(jj)
 
 
 #clean dirty
@@ -70,7 +70,7 @@ for commit in aadara_diffat:
         file_diff[1:] = func_final_all
                 # import pdb;pdb.set_trace()
                 # pass
-
+final_data = [commit for commit in aadara_diffat if commit[1]]
 
 with open('clean_py.json','w') as pyjson:
-    json.dump(aadara_diffat,pyjson)
+    json.dump(final_data ,pyjson)

@@ -1,7 +1,7 @@
 from tokenizers import Tokenizer
 import json
 
-tokenizer = Tokenizer.from_file("kano_py_tokenizer.json")
+tokenizer = Tokenizer.from_file("kano_py_tokenizer_clean.json")
 
 with open('clean_py.json') as cleanpy:
     data = json.load(cleanpy)

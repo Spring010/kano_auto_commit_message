@@ -197,6 +197,7 @@ inputdata = [[d.to(device) for d in data] for data in inputdata]
 outputdata = [d.to(device) for d in outputdata]
 
 data = list(zip(inputdata,outputdata))
+data = data[:300]
 train_size = int(0.8 * len(data))
 validation_size = int(0.5 * (len(data) - train_size))
 test_size = len(data) - train_size - validation_size

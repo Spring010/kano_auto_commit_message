@@ -17,12 +17,18 @@ def main():
     normhexsha = listhexsha_set.difference(rootcommit_set)
     normhexsha_list = list(normhexsha)
     rootcommit_list = list(rootcommit_set)
-    normdiff = [(i, repo.git.diff(i + '~1', i)) for i in normhexsha_list[:1000]]
+    normdiff = []
+    for i,commit in enumerate(normhexsha_list):
+        diff = commit, repo.git.diff(commit + '~1', commit)
+        normdiff.append(diff)
+        print(i, len(normhexsha_list))
+
     rootdiff = []
-    for i in rootcommit_list:
-        repo.git.checkout(i)
-        rootdiff0 = (i, repo.git.log('-p'))
+    for i,commit in enumerate(rootcommit_list):
+        repo.git.checkout(commit)
+        rootdiff0 = (commit, repo.git.log('-p'))
         rootdiff.append(rootdiff0)
+        print(i,len(rootcommit_list))
 
     #merge input and output
     mergeio =[]

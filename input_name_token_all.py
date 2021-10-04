@@ -41,7 +41,7 @@ bert_tokenizer.post_processor = TemplateProcessing(
 from tokenizers.trainers import WordPieceTrainer
 
 trainer = WordPieceTrainer(
-    vocab_size=30522, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"]
+    vocab_size=50522, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"]
 )
 
 

@@ -47,15 +47,27 @@ bert_tokenizer.post_processor = TemplateProcessing(
     ],
 )
 #We can use this tokenizer and train on it on wikitext like in the Quicktour:
-from tokenizers.trainers import WordPieceTrainer
+#from tokenizers.trainers import WordPieceTrainer
+from tokenizers import trainers
+import string
+alphabet = [l for l in string.ascii_letters]
 
-trainer = WordPieceTrainer(
-    vocab_size=30522, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],  min_frequency = 1,
+trainer = trainers.WordPieceTrainer(
+    vocab_size=10000, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],  min_frequency = 50,
 )
 
+#BpeTrainer', 'Trainer', 'UnigramTrainer', 'WordLevelTrainer', 'WordPieceTrainer
 
 bert_tokenizer.train_from_iterator(tokenize_data, trainer)
 
 print(bert_tokenizer.get_vocab())
+
+keys = list(bert_tokenizer.get_vocab().keys())
+num_pieces = len([k for k in keys if k.startswith('#')])
+num_words = len([k for k in keys if not k.startswith('#')])
+print(num_pieces)
+print(num_words)
+
+
 
 bert_tokenizer.save("kano_py_tokenizer.json")
