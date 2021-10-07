@@ -53,7 +53,7 @@ import string
 alphabet = [l for l in string.ascii_letters]
 
 trainer = trainers.WordPieceTrainer(
-    vocab_size=10000, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],  min_frequency = 50,
+    vocab_size=2000, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"],  min_frequency = 50,
 )
 
 #BpeTrainer', 'Trainer', 'UnigramTrainer', 'WordLevelTrainer', 'WordPieceTrainer
