@@ -221,6 +221,7 @@ weight_idf = {int(k):v for k,v in weight_idf.items()}
 default_weight = torch.mean(torch.tensor(list(weight_idf.values())))
 output_weight_list = [weight_idf.get(i,default_weight) for i in range(py_tokenizer.get_vocab_size())]
 output_weight = torch.tensor(output_weight_list)
+output_weight = output_weight.to(device)
 
 
 hidden_size = 256
