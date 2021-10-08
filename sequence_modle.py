@@ -8,6 +8,7 @@ import torch.nn as nn
 from torch import optim
 import torch.nn.functional as F
 from nltk.translate.bleu_score import corpus_bleu
+import json
 
 MAX_LENGTH = 10000
 
@@ -68,7 +69,7 @@ class AttnDecoderRNN(nn.Module):
         return torch.zeros(1, 1, self.hidden_size, device=device)
 
 
-def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, criterion, teacher_forcing_ratio=0.5, max_length=MAX_LENGTH):
+def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, teacher_forcing_ratio=0.5, max_length=MAX_LENGTH):
     encoder_hidden = encoder.initHidden()
 
     encoder_optimizer.zero_grad()
@@ -91,13 +92,15 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     decoder_hidden = encoder_hidden
 
     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-
+    loss_fn = torch.nn.NLLLoss(weight = output_weight, reduction = 'sum')
+    output_vocabsize = py_tokenizer.get_vocab_size()
     if use_teacher_forcing:
         # Teacher forcing: Feed the target as the next input
         for di in range(target_length):
             decoder_output, decoder_hidden, decoder_attention = decoder(
                 decoder_input, decoder_hidden, encoder_outputs)
-            loss += criterion(decoder_output, target_tensor[di])
+
+            loss += loss_fn(decoder_output, target_tensor[di])
             decoder_input = target_tensor[di]  # Teacher forcing
 
     else:
@@ -108,7 +111,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
             topv, topi = decoder_output.topk(1)
             decoder_input = topi.squeeze().detach()  # detach from history as input
 
-            loss += criterion(decoder_output, target_tensor[di])
+            loss += loss_fn(decoder_output, target_tensor[di])
             if decoder_input.item() == EOS_token:
                 break
 
@@ -123,14 +126,13 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 def trainIters(encoder, decoder, train_dataset, n_iters=1, learning_rate=0.01):
     encoder_optimizer = optim.SGD(encoder.parameters(), lr=learning_rate)
     decoder_optimizer = optim.SGD(decoder.parameters(), lr=learning_rate)
-    criterion = nn.NLLLoss()
     for iter in range(n_iters):
         (input_tensor, input_segment), target_tensor = random.choice(train_dataset)
         #(input_tensor, input_segment), target_tensor = train_dataset[0]
         input_tensor = input_tensor.unsqueeze(-1)
         target_tensor = target_tensor.unsqueeze(-1)
         loss = train(input_tensor, target_tensor, encoder,
-                     decoder, encoder_optimizer, decoder_optimizer, criterion)
+                     decoder, encoder_optimizer, decoder_optimizer)
         print('iter=', iter, ', loss=', loss)
     return loss
 
@@ -210,9 +212,16 @@ test_dataset = data[-test_size:]
 from tokenizers import Tokenizer
 input_code_tokenizer = Tokenizer.from_file("kano_input_code_tokenizer.json")
 py_tokenizer = Tokenizer.from_file("kano_py_tokenizer.json")
-
 SOS_token = py_tokenizer.token_to_id("[CLS]")
 EOS_token = py_tokenizer.token_to_id("[SEP]")
+
+with open('idf.json') as idf:
+    weight_idf = json.load(idf)
+weight_idf = {int(k):v for k,v in weight_idf.items()}
+default_weight = torch.mean(torch.tensor(list(weight_idf.values())))
+output_weight_list = [weight_idf.get(i,default_weight) for i in range(py_tokenizer.get_vocab_size())]
+output_weight = torch.tensor(output_weight_list)
+
 
 hidden_size = 256
 encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), hidden_size).to(device)
