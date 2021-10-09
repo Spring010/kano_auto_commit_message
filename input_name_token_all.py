@@ -1,7 +1,7 @@
 import json
 from tokenizers import Tokenizer
 
-with open('clean_py.json') as cleanpy:
+with open('clean_comment_py.json') as cleanpy:
     data = json.load(cleanpy)
 
 input_name_all = []

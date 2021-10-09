@@ -92,7 +92,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     decoder_hidden = encoder_hidden
 
     use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
-    loss_fn = torch.nn.NLLLoss(weight = output_weight, reduction = 'sum')
+    loss_fn = torch.nn.NLLLoss()
     output_vocabsize = py_tokenizer.get_vocab_size()
     if use_teacher_forcing:
         # Teacher forcing: Feed the target as the next input
@@ -134,6 +134,8 @@ def trainIters(encoder, decoder, train_dataset, n_iters=1, learning_rate=0.01):
         loss = train(input_tensor, target_tensor, encoder,
                      decoder, encoder_optimizer, decoder_optimizer)
         print('iter=', iter, ', loss=', loss)
+        #evaluateRandomly(encoder,decoder)
+
     return loss
 
 def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
@@ -171,7 +173,7 @@ def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
         return decoded_words, decoder_attentions[:di + 1]
 
 
-def evaluateRandomly(encoder, decoder, n=3):
+def evaluateRandomly(encoder, decoder, n=10):
     output = []
     target = []
     for i in range(n):
@@ -211,7 +213,7 @@ test_dataset = data[-test_size:]
 
 from tokenizers import Tokenizer
 input_code_tokenizer = Tokenizer.from_file("kano_input_code_tokenizer.json")
-py_tokenizer = Tokenizer.from_file("kano_py_tokenizer.json")
+py_tokenizer = Tokenizer.from_file("kano_py_tokenizer_clean.json")
 SOS_token = py_tokenizer.token_to_id("[CLS]")
 EOS_token = py_tokenizer.token_to_id("[SEP]")
 
@@ -228,6 +230,6 @@ hidden_size = 256
 encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), hidden_size).to(device)
 attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1).to(device)
 
-loss = trainIters(encoder1, attn_decoder1, train_dataset, n_iters=30, learning_rate=0.01)
+loss = trainIters(encoder1, attn_decoder1, train_dataset, n_iters=100, learning_rate=0.01)
 
 evaluateRandomly(encoder1, attn_decoder1)

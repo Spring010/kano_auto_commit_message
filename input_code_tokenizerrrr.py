@@ -1,7 +1,7 @@
 import json
 from tokenizers import Tokenizer
 
-with open('clean_py.json') as cleanpy:
+with open('clean_comment_py.json') as cleanpy:
     data = json.load(cleanpy)
 
 #clean code data
@@ -81,7 +81,7 @@ bert_tokenizer.post_processor = TemplateProcessing(
 from tokenizers.trainers import WordPieceTrainer
 
 trainer = WordPieceTrainer(
-    vocab_size=10000, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"]
+    vocab_size=30000, special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"]
 )
 
 
