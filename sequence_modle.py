@@ -123,20 +123,26 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
     return loss.item() / target_length
 
 
-def trainIters(encoder, decoder, train_dataset, n_iters=1, learning_rate=0.01):
-    encoder_optimizer = optim.SGD(encoder.parameters(), lr=learning_rate)
-    decoder_optimizer = optim.SGD(decoder.parameters(), lr=learning_rate)
-    for iter in range(n_iters):
-        (input_tensor, input_segment), target_tensor = random.choice(train_dataset)
-        #(input_tensor, input_segment), target_tensor = train_dataset[0]
-        input_tensor = input_tensor.unsqueeze(-1)
-        target_tensor = target_tensor.unsqueeze(-1)
-        loss = train(input_tensor, target_tensor, encoder,
-                     decoder, encoder_optimizer, decoder_optimizer)
-        print('iter=', iter, ', loss=', loss)
-        #evaluateRandomly(encoder,decoder)
+def trainIters(encoder, decoder, train_dataset, n_epochs=1, learning_rate=0.01):
+    encoder_optimizer = optim.Adagrad(encoder.parameters(), lr=learning_rate)
+    decoder_optimizer = optim.Adagrad(decoder.parameters(), lr=learning_rate)
+    for epoch in range(n_epochs):
+        random.shuffle(train_dataset)
+        losses = []
+        for index, data in enumerate(train_dataset):
+            (input_tensor, input_segment), target_tensor = data
+            #(input_tensor, input_segment), target_tensor = train_dataset[0]
+            input_tensor = input_tensor.unsqueeze(-1)
+            target_tensor = target_tensor.unsqueeze(-1)
+            loss = train(input_tensor, target_tensor, encoder,
+                         decoder, encoder_optimizer, decoder_optimizer)
+            losses.append(loss)
+            print(index)
+        loss_avg = torch.mean(torch.tensor(losses))
+        print('epoch=', epoch, ', loss=', loss_avg)
+        evaluateRandomly(encoder,decoder)
 
-    return loss
+    return loss_avg
 
 def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
     with torch.no_grad():
@@ -167,7 +173,6 @@ def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
                 break
             else:
                 decoded_words.append(topi.item())
-                #decoded_words.append(py_tokenizer.decode([topi.item()]))
 
             decoder_input = topi.squeeze().detach()
         return decoded_words, decoder_attentions[:di + 1]
@@ -213,23 +218,23 @@ test_dataset = data[-test_size:]
 
 from tokenizers import Tokenizer
 input_code_tokenizer = Tokenizer.from_file("kano_input_code_tokenizer.json")
-py_tokenizer = Tokenizer.from_file("kano_py_tokenizer_clean.json")
+py_tokenizer = Tokenizer.from_file("kano_py_tokenizer.json")
 SOS_token = py_tokenizer.token_to_id("[CLS]")
 EOS_token = py_tokenizer.token_to_id("[SEP]")
 
-with open('idf.json') as idf:
-    weight_idf = json.load(idf)
-weight_idf = {int(k):v for k,v in weight_idf.items()}
-default_weight = torch.mean(torch.tensor(list(weight_idf.values())))
-output_weight_list = [weight_idf.get(i,default_weight) for i in range(py_tokenizer.get_vocab_size())]
-output_weight = torch.tensor(output_weight_list)
-output_weight = output_weight.to(device)
+# with open('idf.json') as idf:
+#     weight_idf = json.load(idf)
+# weight_idf = {int(k):v for k,v in weight_idf.items()}
+# default_weight = torch.mean(torch.tensor(list(weight_idf.values())))
+# output_weight_list = [weight_idf.get(i,default_weight) for i in range(py_tokenizer.get_vocab_size())]
+# output_weight = torch.tensor(output_weight_list)
+# output_weight = output_weight.to(device)
 
 
-hidden_size = 256
+hidden_size = 1024
 encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), hidden_size).to(device)
 attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1).to(device)
 
-loss = trainIters(encoder1, attn_decoder1, train_dataset, n_iters=100, learning_rate=0.01)
+loss = trainIters(encoder1, attn_decoder1, train_dataset, n_iters=100, learning_rate=0.001)
 
 evaluateRandomly(encoder1, attn_decoder1)
