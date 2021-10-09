@@ -140,7 +140,10 @@ def trainIters(encoder, decoder, train_dataset, n_epochs=1, learning_rate=0.01):
             print(index)
         loss_avg = torch.mean(torch.tensor(losses))
         print('epoch=', epoch, ', loss=', loss_avg)
-        evaluateRandomly(encoder,decoder)
+        print('evaluating train')
+        evaluateRandomly(encoder,decoder,train_dataset)
+        print('evaluating validation')
+        evaluateRandomly(encoder,decoder,validation_dataset)
 
     return loss_avg
 
@@ -178,7 +181,7 @@ def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
         return decoded_words, decoder_attentions[:di + 1]
 
 
-def evaluateRandomly(encoder, decoder, n=10):
+def evaluateRandomly(encoder, decoder, validation_dataset, n=10):
     output = []
     target = []
     for i in range(n):
@@ -186,13 +189,16 @@ def evaluateRandomly(encoder, decoder, n=10):
         #(input_tensor, input_segment), target_tensor = train_dataset[0]
         output_words, attentions = evaluate(encoder, decoder, input_tensor)
         output_words = py_tokenizer.decode(output_words)
+        train_words = py_tokenizer.decode(list(target_tensor))
+        print(output_words)
+        print('--------------')
+        print(train_words)
+        print('==============')
         output.append(output_words)
-        target.append([py_tokenizer.decode(list(target_tensor))])
+        target.append([train_words])
     references = target
     candidates = output
     score = corpus_bleu(references,candidates)
-    print(references)
-    print(candidates)
     #output_sentence = ' '.join(output_words)
     print('score: ', score)
 
@@ -206,7 +212,7 @@ inputdata = [[d.to(device) for d in data] for data in inputdata]
 outputdata = [d.to(device) for d in outputdata]
 
 data = list(zip(inputdata,outputdata))
-data = data[:300]
+data = data[:3000]
 train_size = int(0.8 * len(data))
 validation_size = int(0.5 * (len(data) - train_size))
 test_size = len(data) - train_size - validation_size
@@ -237,4 +243,4 @@ attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropo
 
 loss = trainIters(encoder1, attn_decoder1, train_dataset, n_epochs=100, learning_rate=0.001)
 
-evaluateRandomly(encoder1, attn_decoder1)
+#evaluateRandomly(encoder1, attn_decoder1,validation_dataset)
