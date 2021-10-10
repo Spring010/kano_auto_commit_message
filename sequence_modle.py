@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from nltk.translate.bleu_score import corpus_bleu
 import json
 
-MAX_LENGTH = 10000
+MAX_LENGTH = 20000
 
 
 class EncoderRNN(nn.Module):
@@ -138,7 +138,7 @@ def trainIters(encoder, decoder, train_dataset, n_epochs=1, learning_rate=0.01):
             target_tensor = target_tensor.unsqueeze(-1)
             input_segment = input_segment.unsqueeze(-1)
             loss = train(input_tensor, input_segment, target_tensor, encoder,
-                         decoder, encoder_optimizer, decoder_optimizer)
+                         decoder, encoder_optimizer, decoder_optimizer, max_length= input_max_length)
             losses.append(loss)
             print(index)
         loss_avg = torch.mean(torch.tensor(losses))
@@ -215,6 +215,8 @@ inputdata = [[d.to(device) for d in data] for data in inputdata]
 outputdata = [d.to(device) for d in outputdata]
 
 data = list(zip(inputdata,outputdata))
+input_max_length = max(len(d[0][0]) for d in data)
+print(f'input_max_length = {input_max_length}')
 data = data[:3000]
 train_size = int(0.8 * len(data))
 validation_size = int(0.5 * (len(data) - train_size))
@@ -241,8 +243,10 @@ EOS_token = py_tokenizer.token_to_id("[SEP]")
 
 segment_size = 4
 hidden_size = 1024
+output_max_length = 100
+
 encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), segment_size, hidden_size).to(device)
-attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1).to(device)
+attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1, max_length= output_max_length).to(device)
 
 loss = trainIters(encoder1, attn_decoder1, train_dataset, n_epochs=100, learning_rate=0.001)
 
