@@ -209,14 +209,17 @@ def evaluateRandomly(encoder, decoder, validation_dataset, n=10):
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+input_max_length = 10000
+print(f'input_max_length = {input_max_length}')
+
+
 inputdata = torch.load('input.pt')
+inputdata =[((i[:input_max_length],s[:input_max_length]), t) for (i,s), t in inputdata]
 outputdata = torch.load('output.pt')
 inputdata = [[d.to(device) for d in data] for data in inputdata]
 outputdata = [d.to(device) for d in outputdata]
 
 data = list(zip(inputdata,outputdata))
-input_max_length = max(len(d[0][0]) for d in data)
-print(f'input_max_length = {input_max_length}')
 data = data[:3000]
 train_size = int(0.8 * len(data))
 validation_size = int(0.5 * (len(data) - train_size))
@@ -246,7 +249,7 @@ hidden_size = 1024
 output_max_length = 100
 
 encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), segment_size, hidden_size).to(device)
-attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1, max_length= output_max_length).to(device)
+attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1, max_length= input_max_length).to(device)
 
 loss = trainIters(encoder1, attn_decoder1, train_dataset, n_epochs=100, learning_rate=0.001)
 
