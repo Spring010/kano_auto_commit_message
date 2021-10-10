@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from nltk.translate.bleu_score import corpus_bleu
 import json
 
-MAX_LENGTH = 20000
+MAX_LENGTH = 10000
 
 
 class EncoderRNN(nn.Module):
