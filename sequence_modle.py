@@ -14,16 +14,18 @@ MAX_LENGTH = 10000
 
 
 class EncoderRNN(nn.Module):
-    def __init__(self, input_size, hidden_size):
+    def __init__(self, input_size, segment_size, hidden_size):
         super(EncoderRNN, self).__init__()
         self.hidden_size = hidden_size
 
         self.embedding = nn.Embedding(input_size, hidden_size)
+        self.segment_embedding = nn.Embedding(segment_size, hidden_size)
         self.gru = nn.GRU(hidden_size, hidden_size)
 
-    def forward(self, input, hidden):
+    def forward(self, input, segment, hidden):
         embedded = self.embedding(input).view(1, 1, -1)
-        output = embedded
+        segment_embedded = self.segment_embedding(segment).view(1, 1, -1)
+        output = embedded + segment_embedded
         output, hidden = self.gru(output, hidden)
         return output, hidden
 
@@ -69,7 +71,7 @@ class AttnDecoderRNN(nn.Module):
         return torch.zeros(1, 1, self.hidden_size, device=device)
 
 
-def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, teacher_forcing_ratio=0.5, max_length=MAX_LENGTH):
+def train(input_tensor, input_segment, target_tensor, encoder, decoder, encoder_optimizer, decoder_optimizer, teacher_forcing_ratio=0.5, max_length=MAX_LENGTH):
     encoder_hidden = encoder.initHidden()
 
     encoder_optimizer.zero_grad()
@@ -84,7 +86,7 @@ def train(input_tensor, target_tensor, encoder, decoder, encoder_optimizer, deco
 
     for ei in range(input_length):
         encoder_output, encoder_hidden = encoder(
-            input_tensor[ei], encoder_hidden)
+            input_tensor[ei], input_segment[ei], encoder_hidden)
         encoder_outputs[ei] = encoder_output[0, 0]
 
     decoder_input = torch.tensor([[SOS_token]], device=device)
@@ -134,7 +136,8 @@ def trainIters(encoder, decoder, train_dataset, n_epochs=1, learning_rate=0.01):
             #(input_tensor, input_segment), target_tensor = train_dataset[0]
             input_tensor = input_tensor.unsqueeze(-1)
             target_tensor = target_tensor.unsqueeze(-1)
-            loss = train(input_tensor, target_tensor, encoder,
+            input_segment = input_segment.unsqueeze(-1)
+            loss = train(input_tensor, input_segment, target_tensor, encoder,
                          decoder, encoder_optimizer, decoder_optimizer)
             losses.append(loss)
             print(index)
@@ -236,9 +239,9 @@ EOS_token = py_tokenizer.token_to_id("[SEP]")
 # output_weight = torch.tensor(output_weight_list)
 # output_weight = output_weight.to(device)
 
-
+segment_size = 4
 hidden_size = 1024
-encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), hidden_size).to(device)
+encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), segment_size, hidden_size).to(device)
 attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1).to(device)
 
 loss = trainIters(encoder1, attn_decoder1, train_dataset, n_epochs=100, learning_rate=0.001)
