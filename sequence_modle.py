@@ -150,7 +150,7 @@ def trainIters(encoder, decoder, train_dataset, n_epochs=1, learning_rate=0.01):
 
     return loss_avg
 
-def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
+def evaluate(encoder, decoder, input_tensor, input_segment_tensor, max_length=MAX_LENGTH):
     with torch.no_grad():
         input_length = input_tensor.size()[0]
         encoder_hidden = encoder.initHidden()
@@ -159,6 +159,7 @@ def evaluate(encoder, decoder, input_tensor, max_length=MAX_LENGTH):
 
         for ei in range(input_length):
             encoder_output, encoder_hidden = encoder(input_tensor[ei],
+                                                     input_segment_tensor[ei],
                                                      encoder_hidden)
             encoder_outputs[ei] += encoder_output[0, 0]
 
@@ -190,7 +191,7 @@ def evaluateRandomly(encoder, decoder, validation_dataset, n=10):
     for i in range(n):
         (input_tensor, input_segment), target_tensor = random.choice(validation_dataset)
         #(input_tensor, input_segment), target_tensor = train_dataset[0]
-        output_words, attentions = evaluate(encoder, decoder, input_tensor)
+        output_words, attentions = evaluate(encoder, decoder, input_tensor, input_segment)
         output_words = py_tokenizer.decode(output_words)
         train_words = py_tokenizer.decode(list(target_tensor))
         print(output_words)
