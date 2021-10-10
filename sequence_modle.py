@@ -214,7 +214,7 @@ print(f'input_max_length = {input_max_length}')
 
 
 inputdata = torch.load('input.pt')
-inputdata =[((i[:input_max_length],s[:input_max_length]), t) for (i,s), t in inputdata]
+inputdata =[(i[:input_max_length],s[:input_max_length]) for i,s in inputdata]
 outputdata = torch.load('output.pt')
 inputdata = [[d.to(device) for d in data] for data in inputdata]
 outputdata = [d.to(device) for d in outputdata]
