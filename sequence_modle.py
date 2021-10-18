@@ -29,6 +29,7 @@ class EncoderRNN(nn.Module):
         output, hidden = self.gru(output, hidden)
         return output, hidden
 
+
     def initHidden(self):
         return torch.zeros(1, 1, self.hidden_size, device=device)
 
@@ -57,6 +58,7 @@ class AttnDecoderRNN(nn.Module):
             self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
         attn_applied = torch.bmm(attn_weights.unsqueeze(0),
                                  encoder_outputs.unsqueeze(0))
+
 
         output = torch.cat((embedded[0], attn_applied[0]), 1)
         output = self.attn_combine(output).unsqueeze(0)
@@ -206,52 +208,51 @@ def evaluateRandomly(encoder, decoder, validation_dataset, n=10):
     #output_sentence = ' '.join(output_words)
     print('score: ', score)
 
-
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+if __name__ == '__main__':
 
-input_max_length = 10000
-print(f'input_max_length = {input_max_length}')
-
-
-inputdata = torch.load('input.pt')
-inputdata =[(i[:input_max_length],s[:input_max_length]) for i,s in inputdata]
-outputdata = torch.load('output.pt')
-inputdata = [[d.to(device) for d in data] for data in inputdata]
-outputdata = [d.to(device) for d in outputdata]
-
-data = list(zip(inputdata,outputdata))
-data = data[:3000]
-train_size = int(0.8 * len(data))
-validation_size = int(0.5 * (len(data) - train_size))
-test_size = len(data) - train_size - validation_size
-train_dataset = data[:train_size]
-validation_dataset = data[train_size:train_size+validation_size]
-test_dataset = data[-test_size:]
+    input_max_length = 10000
+    print(f'input_max_length = {input_max_length}')
 
 
+    inputdata = torch.load('input.pt')
+    inputdata =[(i[:input_max_length],s[:input_max_length]) for i,s in inputdata]
+    outputdata = torch.load('output.pt')
+    inputdata = [[d.to(device) for d in data] for data in inputdata]
+    outputdata = [d.to(device) for d in outputdata]
 
-from tokenizers import Tokenizer
-input_code_tokenizer = Tokenizer.from_file("kano_input_code_tokenizer.json")
-py_tokenizer = Tokenizer.from_file("kano_py_tokenizer.json")
-SOS_token = py_tokenizer.token_to_id("[CLS]")
-EOS_token = py_tokenizer.token_to_id("[SEP]")
+    data = list(zip(inputdata,outputdata))
+    data = data[:3000]
+    train_size = int(0.8 * len(data))
+    validation_size = int(0.5 * (len(data) - train_size))
+    test_size = len(data) - train_size - validation_size
+    train_dataset = data[:train_size]
+    validation_dataset = data[train_size:train_size+validation_size]
+    test_dataset = data[-test_size:]
 
-# with open('idf.json') as idf:
-#     weight_idf = json.load(idf)
-# weight_idf = {int(k):v for k,v in weight_idf.items()}
-# default_weight = torch.mean(torch.tensor(list(weight_idf.values())))
-# output_weight_list = [weight_idf.get(i,default_weight) for i in range(py_tokenizer.get_vocab_size())]
-# output_weight = torch.tensor(output_weight_list)
-# output_weight = output_weight.to(device)
 
-segment_size = 4
-hidden_size = 1024
-output_max_length = 100
 
-encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), segment_size, hidden_size).to(device)
-attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1, max_length= input_max_length).to(device)
+    from tokenizers import Tokenizer
+    input_code_tokenizer = Tokenizer.from_file("kano_input_code_tokenizer.json")
+    py_tokenizer = Tokenizer.from_file("kano_py_tokenizer.json")
+    SOS_token = py_tokenizer.token_to_id("[CLS]")
+    EOS_token = py_tokenizer.token_to_id("[SEP]")
 
-loss = trainIters(encoder1, attn_decoder1, train_dataset, n_epochs=100, learning_rate=0.001)
+    # with open('idf.json') as idf:
+    #     weight_idf = json.load(idf)
+    # weight_idf = {int(k):v for k,v in weight_idf.items()}
+    # default_weight = torch.mean(torch.tensor(list(weight_idf.values())))
+    # output_weight_list = [weight_idf.get(i,default_weight) for i in range(py_tokenizer.get_vocab_size())]
+    # output_weight = torch.tensor(output_weight_list)
+    # output_weight = output_weight.to(device)
 
-#evaluateRandomly(encoder1, attn_decoder1,validation_dataset)
+    segment_size = 4
+    hidden_size = 1024
+    output_max_length = 100
+
+    encoder1 = EncoderRNN(input_code_tokenizer.get_vocab_size(), segment_size, hidden_size).to(device)
+    attn_decoder1 = AttnDecoderRNN(hidden_size, py_tokenizer.get_vocab_size(), dropout_p=0.1, max_length= input_max_length).to(device)
+
+    loss = trainIters(encoder1, attn_decoder1, train_dataset, n_epochs=100, learning_rate=0.001)
+
+    #evaluateRandomly(encoder1, attn_decoder1,validation_dataset)
