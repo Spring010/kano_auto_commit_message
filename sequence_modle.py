@@ -29,7 +29,6 @@ class EncoderRNN(nn.Module):
         output, hidden = self.gru(output, hidden)
         return output, hidden
 
-
     def initHidden(self):
         return torch.zeros(1, 1, self.hidden_size, device=device)
 
@@ -58,7 +57,6 @@ class AttnDecoderRNN(nn.Module):
             self.attn(torch.cat((embedded[0], hidden[0]), 1)), dim=1)
         attn_applied = torch.bmm(attn_weights.unsqueeze(0),
                                  encoder_outputs.unsqueeze(0))
-
 
         output = torch.cat((embedded[0], attn_applied[0]), 1)
         output = self.attn_combine(output).unsqueeze(0)
